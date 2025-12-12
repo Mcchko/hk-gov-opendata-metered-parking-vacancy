@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>地圖範圍選擇器</title>
+    <title>停車位地圖查詢系統</title>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -11,6 +11,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
     <!-- Awesome Icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
+    <!-- Leaflet Marker Cluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <style>
         .element-hidden {
             display: none!important;
@@ -68,7 +71,7 @@
         }
         /* Map Section */
         .map-container {
-            height: 70vh !important;
+            height: 73vh !important;
             border-radius: 16px;
             overflow: hidden;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
@@ -110,13 +113,13 @@
         }
         /* 統一摺疊圖標樣式 */
         .panel-title .instructions-collapse,
-        .panel-title .scope-info-collapse {
+        .panel-title .parking-info-collapse {
             color: #4f46e5;
             font-size: 0.9rem;
             transition: transform 0.3s ease;
         }
         .panel-title .instructions-collapse.collapsed,
-        .panel-title .scope-info-collapse.collapsed {
+        .panel-title .parking-info-collapse.collapsed {
             transform: rotate(-90deg);
         }
         /* Instructions */
@@ -155,19 +158,20 @@
             position: absolute;
             left: 0;
         }
-        /* Scope Info */
-        .scope-info {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        /* Parking Info Panel */
+        .parking-info {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
             padding: 16px;
             border-radius: 10px;
-            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+            margin-top: 16px;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
             animation: fadeIn 0.3s ease-out;
             max-height: 500px;
             overflow: hidden;
             transition: max-height 0.3s ease, opacity 0.3s ease, margin-bottom 0.3s ease;
         }
-        .scope-info.collapsed {
+        .parking-info.collapsed {
             max-height: 0;
             opacity: 0;
             margin-bottom: 0;
@@ -185,7 +189,7 @@
                 transform: translateY(0);
             }
         }
-        .scope-info-title {
+        .parking-info-title {
             font-size: 1rem;
             font-weight: 600;
             margin-bottom: 12px;
@@ -193,35 +197,66 @@
             align-items: center;
             gap: 6px;
         }
-        .scope-info-title::before {
-            content: "📍";
+        .parking-info-title::before {
+            content: "🅿️";
             font-size: 1.1rem;
         }
-        .scope-coordinates {
-            font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace;
-            font-size: 0.8rem;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 12px;
-            border-radius: 8px;
+        .parking-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
             margin-bottom: 12px;
-            line-height: 1.5;
+        }
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
             backdrop-filter: blur(4px);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        .scope-area {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.9rem;
-            padding-top: 10px;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        .scope-area-value {
+        .stat-value {
+            font-size: 1.2rem;
             font-weight: 700;
-            font-size: 1.1rem;
             color: #fbbf24;
         }
-        /* Empty State */
+        .stat-label {
+            font-size: 0.75rem;
+            opacity: 0.9;
+        }
+        .parking-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .parking-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid #fbbf24;
+        }
+        .parking-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(2px);
+        }
+        .parking-location {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #fbbf24;
+        }
+        .parking-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            opacity: 0.9;
+        }
         .empty-state {
             text-align: center;
             padding: 30px 16px;
@@ -229,6 +264,7 @@
             background: rgba(249, 250, 251, 0.8);
             border-radius: 10px;
             border: 2px dashed #d1d5db;
+            margin-top: 16px;
         }
         .empty-state::before {
             content: "⬇️";
@@ -326,6 +362,74 @@
             opacity: 1;
             visibility: visible;
         }
+        /* Loading Overlay */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2001;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .loading-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #4f46e5;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        /* Marker Popup Styling */
+        .leaflet-popup-content {
+            min-width: 250px;
+            font-family: 'Inter', sans-serif;
+        }
+        .parking-popup h3 {
+            color: #1f2937;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .parking-popup .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .parking-popup .info-label {
+            font-weight: 600;
+            color: #6b7280;
+            font-size: 0.85rem;
+        }
+        .parking-popup .info-value {
+            text-align: right;
+            font-size: 0.85rem;
+            color: #1f2937;
+        }
+        .parking-popup .address-section {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 2px solid #e5e7eb;
+        }
+        .parking-popup .address-section h4 {
+            color: #4f46e5;
+            margin-bottom: 8px;
+        }
         /* Footer */
         .footer {
             text-align: center;
@@ -354,7 +458,6 @@
                 height: 400px;
                 border-radius: 12px;
             }
-            
             /* 重新設計控制面板為全屏側滑面板 */
             .map-control-panel {
                 position: fixed;
@@ -376,17 +479,12 @@
                 backdrop-filter: blur(20px);
                 box-shadow: 5px 0 25px rgba(0, 0, 0, 0.2);
             }
-            
             .map-control-panel.mobile-visible {
                 transform: translateX(0);
             }
-            
             /* 修改 mobile-toggle 為固定位置 */
             .mobile-toggle {
                 display: block;
-                /* position: fixed; */
-                /* top: 20px; */
-                /* left: 20px; */
                 z-index: 2001; /* 高於控制面板 */
                 background: rgba(255, 255, 255, 0.95);
                 border-radius: 8px;
@@ -398,22 +496,16 @@
                 font-weight: 600;
                 color: #4f46e5;
             }
-            
             /* 顯示面板內的關閉按鈕 */
             .panel-close-btn {
                 display: flex;
             }
-            
             .instructions p {
                 font-size: 0.85rem;
                 padding-left: 16px;
             }
-            .scope-coordinates {
-                font-size: 0.75rem;
-                padding: 10px;
-            }
-            .scope-area-value {
-                font-size: 1rem;
+            .parking-stats {
+                grid-template-columns: 1fr;
             }
             .clear-all-btn {
                 bottom: 50px;
@@ -427,6 +519,10 @@
             }
             .leaflet-bottom.leaflet-left {
                 bottom: 40px !important;
+            }
+            /* Parking list height for mobile */
+            .parking-list {
+                max-height: 150px;
             }
         }
         /* Desktop Enhancements */
@@ -481,12 +577,48 @@
         * {
             transition: all 0.3s ease;
         }
+        /* Custom Marker Cluster Styles */
+        .marker-cluster-small {
+            background-color: rgba(79, 70, 229, 0.6);
+        }
+        .marker-cluster-small div {
+            background-color: rgba(79, 70, 229, 0.8);
+        }
+        .marker-cluster-medium {
+            background-color: rgba(16, 185, 129, 0.6);
+        }
+        .marker-cluster-medium div {
+            background-color: rgba(16, 185, 129, 0.8);
+        }
+        .marker-cluster-large {
+            background-color: rgba(239, 68, 68, 0.6);
+        }
+        .marker-cluster-large div {
+            background-color: rgba(239, 68, 68, 0.8);
+        }
+        .marker-cluster {
+            background-clip: padding-box;
+            border-radius: 20px;
+        }
+        .marker-cluster div {
+            width: 30px;
+            height: 30px;
+            margin-left: 5px;
+            margin-top: 5px;
+            text-align: center;
+            border-radius: 15px;
+            font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
+        }
+        .marker-cluster span {
+            line-height: 30px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header class="header">
-            <h1>地圖範圍選擇器</h1>
+            <h1>停車位地圖查詢系統</h1>
+            <p class="subtitle">繪製範圍以查詢香港路邊停車位資訊</p>
         </header>
         <main class="main-content">
             <section class="map-container">
@@ -494,6 +626,11 @@
                     <i class="fas fa-bars"></i> 控制面板
                 </div>
                 <div id="map"></div>
+                <!-- Loading Overlay -->
+                <div class="loading-overlay" id="loading-overlay">
+                    <div class="loading-spinner"></div>
+                    <p>正在載入停車位數據...</p>
+                </div>
                 <!-- Clear All Button -->
                 <button id="clear-all-btn" class="clear-all-btn">
                     <i class="fas fa-trash-alt"></i> 清除所有範圍
@@ -512,33 +649,45 @@
                         </h2>
                         <div class="instructions" id="instructions">
                             <p><strong>繪製範圍：</strong>點擊矩形工具（左下角），然後在地圖上點擊並拖動</p>
-                            <p><strong>刪除範圍：</strong>點擊「清除所有範圍」按鈕（左下角）以移除矩形</p>
+                            <p><strong>自動查詢：</strong>繪製範圍後系統會自動查詢該區域的停車位</p>
+                            <p><strong>查看詳情：</strong>點擊地圖上的停車位標記以查看詳細資訊</p>
+                            <p><strong>刪除範圍：</strong>點擊「清除所有範圍」按鈕以移除矩形和標記</p>
                             <p><strong>取消繪製：</strong>按下 ESC 鍵或點擊地圖其他位置</p>
-                            <p>同一時間只能有一個活動矩形，新的矩形會替換舊的。</p>
                         </div>
                     </div>
                     <div class="control-section">
-                        <h2 class="panel-title" id="scope-info-toggle">
-                            範圍資訊
-                            <span class="scope-info-collapse" id="collapse-icon-scope-info">
+                        <h2 class="panel-title" id="parking-info-toggle">
+                            停車位資訊
+                            <span class="parking-info-collapse" id="collapse-icon-parking-info">
                                 <i class="fas fa-caret-down"></i>
                             </span>
                         </h2>
-                        <div id="scope-info" class="scope-info" style="display: none;">
-                            <div class="scope-info-title">已選擇範圍</div>
-                            <div id="scope-coordinates" class="scope-coordinates">
-                                北界: --°<br>
-                                南界: --°<br>
-                                東界: --°<br>
-                                西界: --°
+                        <div id="parking-info" class="parking-info" style="display: none;">
+                            <div class="parking-info-title">停車位統計</div>
+                            <div class="parking-stats" id="parking-stats">
+                                <div class="stat-item">
+                                    <span class="stat-value" id="total-parking">0</span>
+                                    <span class="stat-label">總數</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value" id="vehicle-type-a">0</span>
+                                    <span class="stat-label">私家車</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value" id="vehicle-type-b">0</span>
+                                    <span class="stat-label">貨車</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value" id="vehicle-type-c">0</span>
+                                    <span class="stat-label">電單車</span>
+                                </div>
                             </div>
-                            <div class="scope-area">
-                                <span>估算面積：</span>
-                                <span id="scope-area-value" class="scope-area-value">-- 平方公里</span>
+                            <div class="parking-list" id="parking-list">
+                                <!-- Parking items will be dynamically added here -->
                             </div>
                         </div>
-                        <div id="empty-state" class="empty-state">
-                            <p>在地圖上繪製矩形範圍，此處將顯示相關資訊。</p>
+                        <div id="parking-empty-state" class="empty-state">
+                            <p>繪製範圍以自動查詢該區域的停車位。</p>
                         </div>
                     </div>
                 </aside>
@@ -547,7 +696,7 @@
             </section>
         </main>
         <footer class="footer">
-            <p>地圖範圍選擇器 | 支援桌面及流動裝置</p>
+            <p>香港路邊停車位查詢系統 | 數據來源: 香港政府數據一線通</p>
         </footer>
     </div>
     <!-- Leaflet JS -->
@@ -555,6 +704,8 @@
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <!-- Leaflet.draw JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+    <!-- Leaflet Marker Cluster JS -->
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script>
         window.__gc__ = {
             DEFAULT: {
@@ -606,10 +757,29 @@
         // 初始化繪製項目圖層
         const drawnItems = new L.FeatureGroup();
         map.addLayer(drawnItems);
+        // 初始化標記群集層
+        const markers = L.markerClusterGroup({
+            maxClusterRadius: 80,
+            iconCreateFunction: function(cluster) {
+                const count = cluster.getChildCount();
+                let size = 'small';
+                if (count > 50) size = 'large';
+                else if (count > 10) size = 'medium';
+                return L.divIcon({
+                    html: '<div><span>' + count + '</span></div>',
+                    className: 'marker-cluster marker-cluster-' + size,
+                    iconSize: L.point(40, 40)
+                });
+            }
+        });
+        map.addLayer(markers);
         // 追蹤當前範圍
         let currentScope = null;
+        // 追蹤停車位數據
+        let parkingData = null;
         // 獲取 UI 元素
         const clearAllBtn = document.getElementById('clear-all-btn');
+        const loadingOverlay = document.getElementById('loading-overlay');
         // 在左下角初始化繪製控制 - 無編輯模式
         const drawControl = new L.Control.Draw({
             position: 'bottomleft',
@@ -640,19 +810,26 @@
         clearAllBtn.addEventListener('click', function () {
             // 清除所有繪製項目
             drawnItems.clearLayers();
+            // 清除所有標記
+            markers.clearLayers();
             currentScope = null;
+            parkingData = null;
             // 更新 UI
-            const scopeInfo = document.getElementById('scope-info');
-            const emptyState = document.getElementById('empty-state');
-            scopeInfo.style.display = 'none';
-            scopeInfo.classList.remove('collapsed');
-            document.getElementById('collapse-icon-scope-info').classList.remove('collapsed');
-            document.getElementById('collapse-icon-scope-info').innerHTML = '<i class="fas fa-caret-down"></i>';
-            emptyState.style.display = 'block';
+            const parkingInfo = document.getElementById('parking-info');
+            const parkingEmptyState = document.getElementById('parking-empty-state');
+            parkingInfo.style.display = 'none';
+            parkingInfo.classList.remove('collapsed');
+            document.getElementById('collapse-icon-parking-info').classList.remove('collapsed');
+            document.getElementById('collapse-icon-parking-info').innerHTML = '<i class="fas fa-caret-down"></i>';
+            parkingEmptyState.style.display = 'block';
             // 隱藏清除按鈕
             clearAllBtn.classList.remove('visible');
+            // 重置統計數據
+            updateParkingStats(0, 0, 0, 0);
+            // 清空停車位列表
+            document.getElementById('parking-list').innerHTML = '';
             // 顯示反饋訊息
-            showNotification('矩形範圍已成功清除！', 'success');
+            showNotification('所有範圍和停車位標記已清除！', 'success');
         });
         // 顯示通知功能
         function showNotification(message, type = 'info') {
@@ -664,8 +841,9 @@
             // 創建通知元素
             const notification = document.createElement('div');
             notification.className = `notification ${type}`;
+            const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle';
             notification.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                <i class="fas fa-${icon}"></i>
                 <span>${message}</span>
             `;
             // 設定通知樣式
@@ -673,7 +851,7 @@
                 position: 'fixed',
                 bottom: '20px',
                 right: '20px',
-                backgroundColor: type === 'success' ? '#10b981' : '#3b82f6',
+                backgroundColor: type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6',
                 color: 'white',
                 padding: '12px 20px',
                 borderRadius: '8px',
@@ -705,6 +883,196 @@
             `;
             document.head.appendChild(style);
         }
+        // 獲取停車位數據
+        async function fetchParkingData(bounds) {
+            // 顯示載入指示器
+            loadingOverlay.classList.add('visible');
+            try {
+                const minLat = bounds.getSouth().toFixed(6);
+                const maxLat = bounds.getNorth().toFixed(6);
+                const minLng = bounds.getWest().toFixed(6);
+                const maxLng = bounds.getEast().toFixed(6);
+                // 構建 API URL
+                const apiUrl = `https://portal.csdi.gov.hk/server/services/common/td_rcd_1638930345315_81787/MapServer/WFSServer?service=wfs&request=GetFeature&typenames=parkingspaces&outputFormat=geojson&maxFeatures=10&srsName=EPSG:4326&filter=%3CFilter%3E%3CIntersects%3E%3CPropertyName%3ESHAPE%3C/PropertyName%3E%3Cgml:Envelope%20srsName=%27EPSG:4326%27%3E%3Cgml:lowerCorner%3E${minLat}%20${minLng}%3C/gml:lowerCorner%3E%3Cgml:upperCorner%3E${maxLat}%20${maxLng}%3C/gml:upperCorner%3E%3C/gml:Envelope%3E%3C/Intersects%3E%3C/Filter%3E`;
+                // 獲取數據
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                parkingData = await response.json();
+                // 清除現有標記
+                markers.clearLayers();
+                // 添加新標記
+                if (parkingData.features && parkingData.features.length > 0) {
+                    parkingData.features.forEach(feature => {
+                        const [lng, lat] = feature.geometry.coordinates;
+                        const properties = feature.properties;
+                        // 創建自定義圖標
+                        const parkingIcon = L.icon({
+                            iconUrl: 'https://img.icons8.com/?size=100&id=15178&format=png&color=000000',
+                            iconSize: [32, 32],
+                            iconAnchor: [16, 32],
+                            popupAnchor: [0, -32]
+                        });
+                        // 創建標記
+                        const marker = L.marker([lat, lng], { icon: parkingIcon });
+                        // 創建彈出窗口內容
+                        const popupContent = `
+                            <div class="parking-popup">
+                                <h3>停車位 ${properties.ParkingSpaceId}</h3>
+                                <div class="info-row">
+                                    <span class="info-label">地區</span>
+                                    <span class="info-value">${properties.Region_tc} (${properties.Region})</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">區域</span>
+                                    <span class="info-value">${properties.District_tc} (${properties.District})</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">子區域</span>
+                                    <span class="info-value">${properties.SubDistrict_tc} (${properties.SubDistrict})</span>
+                                </div>
+                                <div class="address-section">
+                                    <h4>街道資訊</h4>
+                                    <div class="info-row">
+                                        <span class="info-label">街道</span>
+                                        <span class="info-value">${properties.Street_tc} (${properties.Street})</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">路段</span>
+                                        <span class="info-value">${properties.SectionOfStreet_tc || 'N/A'}</span>
+                                    </div>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">車輛類型</span>
+                                    <span class="info-value">${getVehicleTypeName(properties.VehicleType)}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">限時</span>
+                                    <span class="info-value">${properties.LPP} 分鐘</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">時段</span>
+                                    <span class="info-value">${getOperatingPeriodName(properties.OperatingPeriod)}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">收費單位</span>
+                                    <span class="info-value">${properties.PaymentUnit} 元/${properties.TimeUnit}分鐘</span>
+                                </div>
+                            </div>
+                        `;
+                        marker.bindPopup(popupContent);
+                        markers.addLayer(marker);
+                    });
+                    // 更新統計數據
+                    updateParkingStatistics(parkingData.features);
+                    // 顯示停車位資訊面板
+                    const parkingInfo = document.getElementById('parking-info');
+                    const parkingEmptyState = document.getElementById('parking-empty-state');
+                    parkingInfo.style.display = 'block';
+                    parkingInfo.classList.remove('collapsed');
+                    document.getElementById('collapse-icon-parking-info').classList.remove('collapsed');
+                    document.getElementById('collapse-icon-parking-info').innerHTML = '<i class="fas fa-caret-down"></i>';
+                    parkingEmptyState.style.display = 'none';
+                    // 顯示成功通知
+                    showNotification(`成功獲取 ${parkingData.features.length} 個停車位`, 'success');
+                } else {
+                    // 顯示空狀態
+                    const parkingInfo = document.getElementById('parking-info');
+                    const parkingEmptyState = document.getElementById('parking-empty-state');
+                    parkingInfo.style.display = 'none';
+                    parkingEmptyState.style.display = 'block';
+                    // 更新統計數據為0
+                    updateParkingStats(0, 0, 0, 0);
+                    // 清空停車位列表
+                    document.getElementById('parking-list').innerHTML = '';
+                    // 顯示通知
+                    showNotification('在選擇範圍內未找到停車位', 'info');
+                }
+            } catch (error) {
+                console.error('獲取停車位數據時出錯:', error);
+                showNotification('獲取停車位數據時出錯，請稍後重試', 'error');
+            } finally {
+                // 隱藏載入指示器
+                loadingOverlay.classList.remove('visible');
+            }
+        }
+        // 更新停車位統計
+        function updateParkingStatistics(features) {
+            let total = features.length;
+            let typeA = 0, typeB = 0, typeC = 0;
+            // 清空停車位列表
+            const parkingList = document.getElementById('parking-list');
+            parkingList.innerHTML = '';
+            // 計算統計和創建列表
+            features.forEach((feature, index) => {
+                const properties = feature.properties;
+                // 計算車輛類型
+                switch(properties.VehicleType) {
+                    case 'A':
+                        typeA++;
+                        break;
+                    case 'B':
+                        typeB++;
+                        break;
+                    case 'C':
+                        typeC++;
+                        break;
+                }
+                // 創建停車位列表項目
+                const parkingItem = document.createElement('div');
+                parkingItem.className = 'parking-item';
+                parkingItem.innerHTML = `
+                    <div class="parking-location">停車位 ${properties.ParkingSpaceId}</div>
+                    <div class="parking-details">
+                        <span>${properties.Street_tc}</span>
+                        <span>${properties.LPP}分鐘</span>
+                    </div>
+                `;
+                // 點擊時在地圖上高亮顯示
+                parkingItem.addEventListener('click', () => {
+                    const [lng, lat] = feature.geometry.coordinates;
+                    map.setView([lat, lng], 18);
+                    // 打開彈出窗口
+                    const marker = markers.getLayers().find(m => 
+                        m.getLatLng().lat === lat && m.getLatLng().lng === lng
+                    );
+                    if (marker) {
+                        marker.openPopup();
+                    }
+                });
+                parkingList.appendChild(parkingItem);
+            });
+            // 更新統計顯示
+            updateParkingStats(total, typeA, typeB, typeC);
+        }
+        // 更新統計數據顯示
+        function updateParkingStats(total, typeA, typeB, typeC) {
+            document.getElementById('total-parking').textContent = total;
+            document.getElementById('vehicle-type-a').textContent = typeA;
+            document.getElementById('vehicle-type-b').textContent = typeB;
+            document.getElementById('vehicle-type-c').textContent = typeC;
+        }
+        // 獲取車輛類型名稱
+        function getVehicleTypeName(code) {
+            const types = {
+                'A': '私家車',
+                'B': '貨車',
+                'C': '電單車',
+                'D': '殘疾人士車輛',
+                'E': '的士'
+            };
+            return types[code] || code;
+        }
+        // 獲取營運時段名稱
+        function getOperatingPeriodName(code) {
+            const periods = {
+                'D': '全日',
+                'N': '夜間',
+                'M': '日間'
+            };
+            return periods[code] || code;
+        }
         // 可摺疊指引功能
         const instructionsToggle = document.getElementById('instructions-toggle');
         const instructions = document.getElementById('instructions');
@@ -718,24 +1086,24 @@
                 '<i class="fas fa-caret-right"></i>' :
                 '<i class="fas fa-caret-down"></i>';
         });
-        // 範圍資訊摺疊功能
-        const scopeInfoToggle = document.getElementById('scope-info-toggle');
-        const scopeInfo = document.getElementById('scope-info');
-        const emptyState = document.getElementById('empty-state');
-        const collapseIconScopeInfo = document.getElementById('collapse-icon-scope-info');
-        let scopeInfoCollapsed = false;
-        scopeInfoToggle.addEventListener('click', () => {
-            // 只有當有範圍資訊時才可摺疊
-            if (scopeInfo.style.display !== 'none') {
-                scopeInfoCollapsed = !scopeInfoCollapsed;
-                scopeInfo.classList.toggle('collapsed', scopeInfoCollapsed);
-                collapseIconScopeInfo.classList.toggle('collapsed', scopeInfoCollapsed);
-                collapseIconScopeInfo.innerHTML = scopeInfoCollapsed ?
+        // 停車位資訊摺疊功能
+        const parkingInfoToggle = document.getElementById('parking-info-toggle');
+        const parkingInfo = document.getElementById('parking-info');
+        const parkingEmptyState = document.getElementById('parking-empty-state');
+        const collapseIconParkingInfo = document.getElementById('collapse-icon-parking-info');
+        let parkingInfoCollapsed = false;
+        parkingInfoToggle.addEventListener('click', () => {
+            // 只有當有停車位資訊時才可摺疊
+            if (parkingInfo.style.display !== 'none') {
+                parkingInfoCollapsed = !parkingInfoCollapsed;
+                parkingInfo.classList.toggle('collapsed', parkingInfoCollapsed);
+                collapseIconParkingInfo.classList.toggle('collapsed', parkingInfoCollapsed);
+                collapseIconParkingInfo.innerHTML = parkingInfoCollapsed ?
                     '<i class="fas fa-caret-right"></i>' :
                     '<i class="fas fa-caret-down"></i>';
-            } else if (emptyState.style.display !== 'none') {
-                // 當處於空狀態時，點擊無效果或顯示提示
-                showNotification('請先在地圖上繪製範圍以查看資訊', 'info');
+            } else if (parkingEmptyState.style.display !== 'none') {
+                // 當處於空狀態時，顯示提示
+                showNotification('請先繪製範圍以查詢停車位', 'info');
             }
         });
         // 流動裝置控制面板功能
@@ -744,24 +1112,20 @@
         const panelOverlay = document.getElementById('panel-overlay');
         const panelCloseBtn = document.getElementById('panel-close-btn');
         let panelVisible = window.innerWidth > 768; // 桌面裝置預設顯示
-        
         // 初始化面板狀態
         if (window.innerWidth <= 768) {
             controlPanel.classList.remove('mobile-visible');
             panelVisible = false;
             panelOverlay.classList.remove('visible');
         }
-        
         // 切換面板顯示/隱藏
         function togglePanel() {
             panelVisible = !panelVisible;
             controlPanel.classList.toggle('mobile-visible', panelVisible);
             panelOverlay.classList.toggle('visible', panelVisible);
-            
             // 在流動裝置上，更新 mobile-toggle 文字（始終顯示 "控制面板"）
             if (window.innerWidth <= 768) {
                 mobileToggle.innerHTML = '<i class="fas fa-bars"></i> 控制面板';
-
                 if(panelVisible) {
                     mobileToggle.classList.add("element-hidden");
                 } else {
@@ -769,10 +1133,8 @@
                 }
             }
         }
-        
         // mobile-toggle 點擊事件
         mobileToggle.addEventListener('click', togglePanel);
-        
         // 面板內的關閉按鈕點擊事件
         panelCloseBtn.addEventListener('click', () => {
             panelVisible = false;
@@ -780,77 +1142,42 @@
             panelOverlay.classList.remove('visible');
             mobileToggle.classList.remove("element-hidden");
         });
-        
-        // // 遮罩層點擊事件
-        // panelOverlay.addEventListener('click', () => {
-        //     panelVisible = false;
-        //     controlPanel.classList.remove('mobile-visible');
-        //     panelOverlay.classList.remove('visible');
-        // });
-        
-        // 計算面積（平方公里）
-        function calculateArea(bounds) {
-            const latDiff = Math.abs(bounds.getNorth() - bounds.getSouth());
-            const lngDiff = Math.abs(bounds.getEast() - bounds.getWest());
-            // 近似轉換（1度 ≈ 111.32 公里於赤道）
-            const latKm = latDiff * 111.32;
-            const lngKm = lngDiff * 111.32 * Math.cos((bounds.getNorth() + bounds.getSouth()) * Math.PI / 360);
-            const area = latKm * lngKm;
-            if (area > 1000000) {
-                return `${(area / 1000000).toFixed(1)}百萬平方公里`;
-            } else if (area > 1000) {
-                return `${(area / 1000).toFixed(1)}千平方公里`;
-            } else {
-                return `${area.toFixed(2)} 平方公里`;
-            }
-        }
-        // 更新範圍資訊顯示
-        function updateScopeInfo(bounds) {
-            const scopeInfo = document.getElementById('scope-info');
-            const emptyState = document.getElementById('empty-state');
-            const coordinates = document.getElementById('scope-coordinates');
-            const areaValue = document.getElementById('scope-area-value');
-            const north = bounds.getNorth().toFixed(4);
-            const south = bounds.getSouth().toFixed(4);
-            const east = bounds.getEast().toFixed(4);
-            const west = bounds.getWest().toFixed(4);
-            coordinates.innerHTML = `
-                北界: <strong>${north}°</strong><br>
-                南界: <strong>${south}°</strong><br>
-                東界: <strong>${east}°</strong><br>
-                西界: <strong>${west}°</strong>
-            `;
-            areaValue.textContent = calculateArea(bounds);
-            scopeInfo.style.display = 'block';
-            scopeInfo.classList.remove('collapsed');
-            document.getElementById('collapse-icon-scope-info').classList.remove('collapsed');
-            document.getElementById('collapse-icon-scope-info').innerHTML = '<i class="fas fa-caret-down"></i>';
-            scopeInfoCollapsed = false;
-            emptyState.style.display = 'none';
-            // 顯示清除按鈕
-            clearAllBtn.classList.add('visible');
-            // 在流動裝置選擇範圍時自動顯示面板
-            if (window.innerWidth <= 768 && !panelVisible) {
-                togglePanel();
-            }
-        }
-        // 處理矩形創建
-        map.on(L.Draw.Event.CREATED, function (event) {
+        // 處理矩形創建事件 - 自動查詢停車位
+        map.on(L.Draw.Event.CREATED, async function (event) {
             // 移除任何現有矩形
             drawnItems.clearLayers();
+            // 清除停車位標記和數據
+            markers.clearLayers();
+            parkingData = null;
+            const parkingInfo = document.getElementById('parking-info');
+            const parkingEmptyState = document.getElementById('parking-empty-state');
+            parkingInfo.style.display = 'none';
+            parkingInfo.classList.remove('collapsed');
+            document.getElementById('collapse-icon-parking-info').classList.remove('collapsed');
+            document.getElementById('collapse-icon-parking-info').innerHTML = '<i class="fas fa-caret-down"></i>';
+            parkingEmptyState.style.display = 'block';
+            // 重置統計數據
+            updateParkingStats(0, 0, 0, 0);
+            // 清空停車位列表
+            document.getElementById('parking-list').innerHTML = '';
+            // 添加新矩形
             const rectangle = event.layer;
             drawnItems.addLayer(rectangle);
             currentScope = rectangle;
-            // 更新範圍資訊
-            const bounds = rectangle.getBounds();
-            updateScopeInfo(bounds);
+            // 顯示清除按鈕
+            clearAllBtn.classList.add('visible');
             // 調整地圖顯示矩形範圍（帶邊距）
+            const bounds = rectangle.getBounds();
             map.fitBounds(bounds, {
                 padding: [60, 60],
                 maxZoom: 19
             });
-            // 顯示成功通知
-            showNotification('矩形範圍已成功創建！', 'success');
+            // 自動查詢停車位數據
+            await fetchParkingData(bounds);
+            // 在流動裝置選擇範圍時自動顯示面板
+            if (window.innerWidth <= 768 && !panelVisible) {
+                togglePanel();
+            }
         });
         // 處理 ESC 鍵取消繪製
         document.addEventListener('keydown', function (e) {
@@ -867,10 +1194,11 @@
                 const instructionsP = document.querySelectorAll('.instructions p');
                 if (instructionsP.length >= 3) {
                     instructionsP[0].innerHTML = '<strong>繪製範圍：</strong>點擊矩形工具（左下角），然後在地圖上拖動';
-                    instructionsP[1].innerHTML = '<strong>刪除範圍：</strong>點擊「清除所有範圍」按鈕（左下角）';
-                    instructionsP[2].innerHTML = '<strong>取消繪製：</strong>按下 ESC 或點擊其他位置';
+                    instructionsP[1].innerHTML = '<strong>自動查詢：</strong>繪製範圍後系統會自動查詢該區域的停車位';
+                    instructionsP[2].innerHTML = '<strong>查看詳情：</strong>點擊地圖上的停車位標記以查看詳細資訊';
+                    instructionsP[3].innerHTML = '<strong>刪除範圍：</strong>點擊「清除所有範圍」按鈕（左下角）';
+                    instructionsP[4].innerHTML = '<strong>取消繪製：</strong>按下 ESC 或點擊其他位置';
                 }
-                
                 // 確保面板在流動裝置上初始狀態正確
                 controlPanel.classList.remove('mobile-visible');
                 panelOverlay.classList.remove('visible');
@@ -880,10 +1208,11 @@
                 const instructionsP = document.querySelectorAll('.instructions p');
                 if (instructionsP.length >= 3) {
                     instructionsP[0].innerHTML = '<strong>繪製範圍：</strong>點擊矩形工具（左下角），然後點擊並拖動';
-                    instructionsP[1].innerHTML = '<strong>刪除範圍：</strong>點擊「清除所有範圍」按鈕（左下角）';
-                    instructionsP[2].innerHTML = '<strong>取消繪製：</strong>按下 ESC 鍵或點擊地圖其他位置';
+                    instructionsP[1].innerHTML = '<strong>自動查詢：</strong>繪製範圍後系統會自動查詢該區域的停車位';
+                    instructionsP[2].innerHTML = '<strong>查看詳情：</strong>點擊地圖上的停車位標記以查看詳細資訊';
+                    instructionsP[3].innerHTML = '<strong>刪除範圍：</strong>點擊「清除所有範圍」按鈕（左下角）';
+                    instructionsP[4].innerHTML = '<strong>取消繪製：</strong>按下 ESC 鍵或點擊地圖其他位置';
                 }
-                
                 // 確保面板在桌面上始終顯示
                 controlPanel.classList.add('mobile-visible');
                 panelVisible = true;
@@ -895,10 +1224,10 @@
         window.addEventListener('load', () => {
             optimizeForMobile();
             // 為首次使用者顯示歡迎訊息
-            if (!localStorage.getItem('mapScopeTutorialShown')) {
+            if (!localStorage.getItem('parkingMapTutorialShown')) {
                 setTimeout(() => {
-                    alert("歡迎使用地圖範圍選擇器！\n\n• 使用矩形工具（左下角）繪製範圍\n• 點擊「清除所有範圍」按鈕以移除矩形\n• 同一時間只能有一個活動矩形\n• 按下 ESC 以取消繪製\n• 在流動裝置上點擊「控制面板」以切換面板");
-                    localStorage.setItem('mapScopeTutorialShown', 'true');
+                    alert("歡迎使用停車位地圖查詢系統！\n\n• 使用矩形工具（左下角）繪製範圍\n• 系統會自動查詢該區域的停車位\n• 點擊地圖上的停車位標記查看詳細資訊\n• 點擊「清除所有範圍」按鈕以移除矩形和標記\n• 在流動裝置上點擊「控制面板」以切換面板");
+                    localStorage.setItem('parkingMapTutorialShown', 'true');
                 }, 500);
             }
         });
