@@ -102,6 +102,31 @@
             align-items: center;
             gap: 8px;
         }
+        /* Desktop Toggle Button */
+        .desktop-toggle {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1001;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            padding: 10px 14px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #4f46e5;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        .desktop-toggle:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
         /* Panel Container - Overlay for mobile, side panel for desktop */
         .panel-container {
             position: fixed;
@@ -643,7 +668,7 @@
             text-align: center;
             color: rgba(255, 255, 255, 0.9);
             font-size: 0.875rem;
-            padding: 20px;
+            /* padding: 20px; */
             margin-top: auto;
         }
         /* Mobile Optimizations */
@@ -673,6 +698,9 @@
             }
             .mobile-toggle {
                 display: flex;
+            }
+            .desktop-toggle {
+                display: none;
             }
             .clear-all-btn {
                 bottom: 50px;
@@ -714,6 +742,9 @@
             .mobile-toggle {
                 display: none;
             }
+            .desktop-toggle {
+                display: flex;
+            }
             .panel-container {
                 position: absolute;
                 top: 10px;
@@ -731,6 +762,8 @@
                 opacity: 1;
                 visibility: visible;
                 transform: translateX(0);
+                top: 60px;
+                height: calc(73vh - 70px);
             }
             .panel-overlay {
                 display: none !important;
@@ -830,6 +863,10 @@
                 <div class="mobile-toggle" id="mobile-toggle">
                     <i class="fas fa-info-circle"></i> 控制面板
                 </div>
+                <!-- Desktop Toggle Button -->
+                <div class="desktop-toggle" id="desktop-toggle">
+                    <i class="fas fa-info-circle"></i> 控制面板
+                </div>
                 <div id="map"></div>
                 <!-- Loading Overlay -->
                 <div class="loading-overlay" id="loading-overlay">
@@ -872,7 +909,6 @@
                     <p><strong>取消繪製：</strong>按下 ESC 鍵或點擊地圖其他位置</p>
                 </div>
             </div>
-
             <div class="control-section">
                 <div class="section-title" id="layer-control-toggle">
                     地圖圖層
@@ -1052,6 +1088,7 @@
         const clearAllBtn = document.getElementById('clear-all-btn');
         const loadingOverlay = document.getElementById('loading-overlay');
         const mobileToggle = document.getElementById('mobile-toggle');
+        const desktopToggle = document.getElementById('desktop-toggle');
         const panelContainer = document.getElementById('panel-container');
         const panelOverlay = document.getElementById('panel-overlay');
         const panelCloseBtn = document.getElementById('panel-close-btn');
@@ -1069,10 +1106,20 @@
             } else {
                 // 桌面：淡入淡出
                 panelContainer.classList.toggle('desktop-visible', panelVisible);
+                
+                // 更新桌面 toggle 按鈕文字和圖標
+                const icon = desktopToggle.querySelector('i');
+                if (panelVisible) {
+                    desktopToggle.innerHTML = '<i class="fas fa-times"></i> 關閉面板';
+                } else {
+                    desktopToggle.innerHTML = '<i class="fas fa-info-circle"></i> 控制面板';
+                }
             }
         }
         // 移動端 toggle 按鈕點擊
         mobileToggle.addEventListener('click', togglePanel);
+        // 桌面端 toggle 按鈕點擊
+        desktopToggle.addEventListener('click', togglePanel);
         // 面板關閉按鈕
         panelCloseBtn.addEventListener('click', togglePanel);
         // 遮罩層點擊關閉
@@ -1640,6 +1687,15 @@
         // 處理視窗大小調整
         window.addEventListener('resize', () => {
             optimizeForMobile();
+            // 更新桌面 toggle 按鈕文字和圖標
+            if (window.innerWidth > 768) {
+                const icon = desktopToggle.querySelector('i');
+                if (panelVisible) {
+                    desktopToggle.innerHTML = '<i class="fas fa-times"></i> 關閉面板';
+                } else {
+                    desktopToggle.innerHTML = '<i class="fas fa-info-circle"></i> 控制面板';
+                }
+            }
         });
         // 鍵盤快捷鍵：ESC 鍵關閉面板
         document.addEventListener('keydown', function(e) {
