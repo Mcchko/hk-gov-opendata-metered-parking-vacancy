@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,14 +17,16 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <style>
         .element-hidden {
-            display: none!important;
+            display: none !important;
         }
+
         /* Reset & Base */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
             background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
@@ -31,6 +34,7 @@
             padding: 16px;
             color: #1f2937;
         }
+
         /* Layout */
         .container {
             max-width: 1400px;
@@ -40,6 +44,7 @@
             gap: 20px;
             min-height: 100vh;
         }
+
         /* Header */
         .header {
             background: rgba(255, 255, 255, 0.95);
@@ -50,6 +55,7 @@
             text-align: center;
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
+
         .header h1 {
             color: #111827;
             font-size: 1.875rem;
@@ -60,15 +66,18 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
+
         .header .subtitle {
             color: #6b7280;
             font-size: 1rem;
             line-height: 1.5;
         }
+
         /* Main Content */
         .main-content {
             flex: 1;
         }
+
         /* Map Section */
         .map-container {
             height: 73vh !important;
@@ -78,11 +87,13 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             position: relative;
         }
+
         #map {
             height: 100%;
             width: 100%;
             border-radius: 16px;
         }
+
         /* Mobile Toggle Button */
         .mobile-toggle {
             position: absolute;
@@ -102,6 +113,7 @@
             align-items: center;
             gap: 8px;
         }
+
         /* Desktop Toggle Button */
         .desktop-toggle {
             position: absolute;
@@ -122,11 +134,13 @@
             gap: 8px;
             transition: all 0.3s ease;
         }
+
         .desktop-toggle:hover {
             background: rgba(255, 255, 255, 1);
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
         }
+
         /* Panel Container - Overlay for mobile, side panel for desktop */
         .panel-container {
             position: fixed;
@@ -144,9 +158,11 @@
             padding: 20px;
             overflow-y: auto;
         }
+
         .panel-container.mobile-visible {
             right: 0;
         }
+
         .panel-overlay {
             position: fixed;
             top: 0;
@@ -159,10 +175,12 @@
             visibility: hidden;
             transition: opacity 0.3s ease, visibility 0.3s ease;
         }
+
         .panel-overlay.visible {
             opacity: 1;
             visibility: visible;
         }
+
         .panel-header {
             display: flex;
             justify-content: space-between;
@@ -171,11 +189,13 @@
             padding-bottom: 15px;
             border-bottom: 2px solid #e5e7eb;
         }
+
         .panel-title {
             color: #111827;
             font-size: 1.3rem;
             font-weight: 700;
         }
+
         .panel-close-btn {
             background: none;
             border: none;
@@ -186,18 +206,22 @@
             border-radius: 6px;
             transition: background-color 0.2s;
         }
+
         .panel-close-btn:hover {
             background-color: #f3f4f6;
             color: #4f46e5;
         }
+
         .panel-content {
             flex: 1;
             overflow-y: auto;
             padding-right: 5px;
         }
+
         .control-section {
             margin-bottom: 20px;
         }
+
         .section-title {
             color: #111827;
             font-size: 1.1rem;
@@ -210,14 +234,17 @@
             align-items: center;
             cursor: pointer;
         }
+
         .section-title .collapse-icon {
             color: #4f46e5;
             font-size: 0.9rem;
             transition: transform 0.3s ease;
         }
+
         .section-title .collapse-icon.collapsed {
             transform: rotate(-90deg);
         }
+
         /* Layer Control in Panel */
         .layer-control {
             background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
@@ -229,6 +256,7 @@
             overflow: hidden;
             transition: max-height 0.3s ease, opacity 0.3s ease, margin-bottom 0.3s ease;
         }
+
         .layer-control.collapsed {
             max-height: 0;
             opacity: 0;
@@ -236,6 +264,7 @@
             padding: 0;
             border: none;
         }
+
         .layer-control-title {
             font-size: 0.95rem;
             font-weight: 600;
@@ -245,15 +274,18 @@
             align-items: center;
             gap: 8px;
         }
+
         .layer-control-title::before {
             content: "🗺️";
             font-size: 1.1rem;
         }
+
         .layer-options {
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
+
         .layer-option {
             display: flex;
             align-items: center;
@@ -265,15 +297,18 @@
             border: 1px solid #e5e7eb;
             transition: all 0.2s ease;
         }
+
         .layer-option:hover {
             background: #f8fafc;
             border-color: #0ea5e9;
             transform: translateX(2px);
         }
+
         .layer-option.active {
             background: #dbeafe;
             border-color: #3b82f6;
         }
+
         .layer-option input[type="radio"] {
             appearance: none;
             -webkit-appearance: none;
@@ -286,9 +321,11 @@
             position: relative;
             transition: border-color 0.2s ease;
         }
+
         .layer-option input[type="radio"]:checked {
             border-color: #3b82f6;
         }
+
         .layer-option input[type="radio"]:checked::after {
             content: '';
             position: absolute;
@@ -300,12 +337,14 @@
             background-color: #3b82f6;
             border-radius: 50%;
         }
+
         .layer-option label {
             cursor: pointer;
             font-size: 0.9rem;
             color: #374151;
             flex: 1;
         }
+
         /* Instructions */
         .instructions {
             background: linear-gradient(135deg, #f3f4f6 0%, #f9fafb 100%);
@@ -317,6 +356,7 @@
             overflow: hidden;
             transition: max-height 0.3s ease, opacity 0.3s ease, margin-bottom 0.3s ease;
         }
+
         .instructions.collapsed {
             max-height: 0;
             opacity: 0;
@@ -324,6 +364,7 @@
             padding: 0;
             border: none;
         }
+
         .instructions p {
             margin-bottom: 10px;
             color: #374151;
@@ -332,9 +373,11 @@
             position: relative;
             padding-left: 18px;
         }
+
         .instructions p:last-child {
             margin-bottom: 0;
         }
+
         .instructions p::before {
             content: "•";
             color: #4f46e5;
@@ -342,6 +385,7 @@
             position: absolute;
             left: 0;
         }
+
         /* Parking Info Panel */
         .parking-info {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
@@ -355,6 +399,7 @@
             overflow: hidden;
             transition: max-height 0.3s ease, opacity 0.3s ease, margin-bottom 0.3s ease;
         }
+
         .parking-info.collapsed {
             max-height: 0;
             opacity: 0;
@@ -363,16 +408,19 @@
             border: none;
             overflow: hidden;
         }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
                 transform: translateY(-8px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
+
         .parking-info-title {
             font-size: 1rem;
             font-weight: 600;
@@ -381,10 +429,12 @@
             align-items: center;
             gap: 6px;
         }
+
         .parking-info-title::before {
             content: "🅿️";
             font-size: 1.1rem;
         }
+
         .parking-stats {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -394,20 +444,25 @@
             overflow-y: auto;
             padding-right: 4px;
         }
+
         .parking-stats::-webkit-scrollbar {
             width: 6px;
         }
+
         .parking-stats::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 3px;
         }
+
         .parking-stats::-webkit-scrollbar-thumb {
             background: rgba(255, 255, 255, 0.3);
             border-radius: 3px;
         }
+
         .parking-stats::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.5);
         }
+
         .stat-item {
             display: flex;
             flex-direction: column;
@@ -420,23 +475,27 @@
             min-height: 60px;
             justify-content: center;
         }
+
         .stat-value {
             font-size: 1.1rem;
             font-weight: 700;
             color: #fbbf24;
             margin-bottom: 4px;
         }
+
         .stat-label {
             font-size: 0.7rem;
             opacity: 0.9;
             text-align: center;
             line-height: 1.2;
         }
+
         .parking-list-container {
             margin-top: 12px;
             border-top: 2px solid rgba(255, 255, 255, 0.2);
             padding-top: 12px;
         }
+
         .parking-list-title {
             font-size: 0.9rem;
             font-weight: 600;
@@ -445,29 +504,36 @@
             align-items: center;
             gap: 6px;
         }
+
         .parking-list-title::before {
             content: "📍";
             font-size: 1rem;
         }
+
         .parking-list {
             max-height: 200px;
             overflow-y: auto;
             padding-right: 4px;
         }
+
         .parking-list::-webkit-scrollbar {
             width: 6px;
         }
+
         .parking-list::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 3px;
         }
+
         .parking-list::-webkit-scrollbar-thumb {
             background: rgba(255, 255, 255, 0.3);
             border-radius: 3px;
         }
+
         .parking-list::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.5);
         }
+
         .parking-item {
             background: rgba(255, 255, 255, 0.1);
             padding: 10px;
@@ -479,22 +545,26 @@
             transition: all 0.2s ease;
             border-left: 3px solid #fbbf24;
         }
+
         .parking-item:hover {
             background: rgba(255, 255, 255, 0.2);
             transform: translateX(2px);
         }
+
         .parking-location {
             font-weight: 600;
             margin-bottom: 4px;
             color: #fbbf24;
             font-size: 0.85rem;
         }
+
         .parking-details {
             display: flex;
             justify-content: space-between;
             font-size: 0.75rem;
             opacity: 0.9;
         }
+
         /* Parking Details Panel */
         .parking-details-section {
             background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
@@ -508,6 +578,7 @@
             overflow-y: auto;
             transition: max-height 0.3s ease, opacity 0.3s ease, margin-bottom 0.3s ease;
         }
+
         .parking-details-section.collapsed {
             max-height: 0;
             opacity: 0;
@@ -516,20 +587,25 @@
             border: none;
             overflow: hidden;
         }
+
         .parking-details-section::-webkit-scrollbar {
             width: 6px;
         }
+
         .parking-details-section::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 3px;
         }
+
         .parking-details-section::-webkit-scrollbar-thumb {
             background: rgba(255, 255, 255, 0.3);
             border-radius: 3px;
         }
+
         .parking-details-section::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.5);
         }
+
         .parking-details-title {
             font-size: 1rem;
             font-weight: 600;
@@ -538,13 +614,16 @@
             align-items: center;
             gap: 6px;
         }
+
         .parking-details-title::before {
             content: "📋";
             font-size: 1.1rem;
         }
+
         .parking-details-content {
             font-size: 0.9rem;
         }
+
         .parking-details-content h3 {
             color: #fbbf24;
             margin-bottom: 10px;
@@ -552,6 +631,7 @@
             border-bottom: 2px solid rgba(255, 255, 255, 0.2);
             font-size: 1.1rem;
         }
+
         .parking-details-content .info-row {
             display: flex;
             justify-content: space-between;
@@ -559,26 +639,31 @@
             padding-bottom: 6px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
+
         .parking-details-content .info-label {
             font-weight: 600;
             color: rgba(255, 255, 255, 0.9);
             font-size: 0.85rem;
         }
+
         .parking-details-content .info-value {
             text-align: right;
             font-size: 0.85rem;
             color: #fbbf24;
         }
+
         .parking-details-content .address-section {
             margin-top: 12px;
             padding-top: 12px;
             border-top: 2px solid rgba(255, 255, 255, 0.2);
         }
+
         .parking-details-content .address-section h4 {
             color: #fbbf24;
             margin-bottom: 8px;
             font-size: 1rem;
         }
+
         .empty-state {
             text-align: center;
             padding: 30px 16px;
@@ -588,16 +673,19 @@
             border: 2px dashed #d1d5db;
             margin-bottom: 10px;
         }
+
         .empty-state::before {
             content: "⬇️";
             font-size: 1.5rem;
             display: block;
             margin-bottom: 12px;
         }
+
         .empty-state p {
             font-size: 0.9rem;
             line-height: 1.5;
         }
+
         /* Custom Clear All Button */
         .clear-all-btn {
             position: absolute;
@@ -620,18 +708,22 @@
             opacity: 0;
             pointer-events: none;
         }
+
         .clear-all-btn.visible {
             opacity: 1;
             pointer-events: all;
         }
+
         .clear-all-btn:hover {
             background: #dc2626;
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
         }
+
         .clear-all-btn:active {
             transform: translateY(0);
         }
+
         /* Loading Overlay */
         .loading-overlay {
             position: absolute;
@@ -650,10 +742,12 @@
             visibility: hidden;
             transition: opacity 0.3s ease, visibility 0.3s ease;
         }
+
         .loading-overlay.visible {
             opacity: 1;
             visibility: visible;
         }
+
         .loading-spinner {
             width: 50px;
             height: 50px;
@@ -663,6 +757,7 @@
             animation: spin 1s linear infinite;
             margin-bottom: 20px;
         }
+
         /* Footer */
         .footer {
             text-align: center;
@@ -671,80 +766,100 @@
             /* padding: 20px; */
             margin-top: auto;
         }
+
         /* Mobile Optimizations */
         @media (max-width: 768px) {
             body {
                 padding: 12px;
                 background: #4f46e5;
             }
+
             .container {
                 gap: 16px;
             }
+
             .header {
                 padding: 16px;
                 border-radius: 12px;
             }
+
             .header h1 {
                 font-size: 1.5rem;
             }
+
             .map-container {
                 height: calc(100vh - 180px);
                 border-radius: 12px;
             }
+
             .panel-container {
                 width: 100%;
                 max-width: 100%;
                 right: -100%;
             }
+
             .mobile-toggle {
                 display: flex;
             }
+
             .desktop-toggle {
                 display: none;
             }
+
             .clear-all-btn {
                 bottom: 50px;
                 left: 10px;
                 padding: 12px 20px;
                 font-size: 1rem;
             }
+
             /* Adjust Leaflet controls */
             .leaflet-top.leaflet-left {
                 top: 50px !important;
             }
+
             .leaflet-bottom.leaflet-left {
                 bottom: 40px !important;
             }
+
             /* Parking list height for mobile */
             .parking-list {
                 max-height: 150px;
             }
+
             .parking-details-section {
                 max-height: 300px;
             }
+
             .instructions p {
                 font-size: 0.85rem;
                 padding-left: 16px;
             }
+
             .parking-stats {
                 grid-template-columns: repeat(2, 1fr);
             }
+
             /* Layer control for mobile */
             .layer-control {
                 max-height: 250px;
             }
+
             .layer-option {
                 padding: 10px 12px;
             }
         }
+
         /* Desktop Enhancements */
         @media (min-width: 769px) {
             .mobile-toggle {
                 display: none;
             }
+
             .desktop-toggle {
                 display: flex;
             }
+
             .panel-container {
                 position: absolute;
                 top: 10px;
@@ -758,6 +873,7 @@
                 transform: translateX(20px);
                 transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
             }
+
             .panel-container.desktop-visible {
                 opacity: 1;
                 visibility: visible;
@@ -765,37 +881,46 @@
                 top: 60px;
                 height: calc(73vh - 70px);
             }
+
             .panel-overlay {
                 display: none !important;
             }
+
             .parking-stats {
                 grid-template-columns: repeat(3, 1fr);
                 max-height: 120px;
             }
+
             /* Layer control for desktop */
             .layer-control {
                 max-height: 250px;
             }
         }
+
         /* Leaflet Customizations - Removed topleft controls */
         .leaflet-top.leaflet-left {
             display: none !important;
         }
+
         .leaflet-draw-toolbar {
             border-radius: 8px !important;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
         }
+
         .leaflet-draw-toolbar a {
             border-radius: 6px !important;
         }
+
         /* Hide edit toolbar (Save, Cancel, Delete options) */
         .leaflet-draw-toolbar.leaflet-bar.leaflet-draw-toolbar-top.leaflet-draw-toolbar-notop.leaflet-draw-toolbar-nobottom {
             display: none !important;
         }
+
         /* Hide zoom control from topleft */
         .leaflet-control-zoom {
             display: none !important;
         }
+
         /* Position draw control at bottomleft */
         .leaflet-draw.leaflet-control {
             bottom: 10px !important;
@@ -803,36 +928,46 @@
             top: auto !important;
             right: auto !important;
         }
+
         .leaflet-draw-toolbar {
             margin-bottom: 0 !important;
         }
+
         /* Smooth Transitions */
         * {
             transition: all 0.3s ease;
         }
+
         /* Custom Marker Cluster Styles */
         .marker-cluster-small {
             background-color: rgba(79, 70, 229, 0.6);
         }
+
         .marker-cluster-small div {
             background-color: rgba(79, 70, 229, 0.8);
         }
+
         .marker-cluster-medium {
             background-color: rgba(16, 185, 129, 0.6);
         }
+
         .marker-cluster-medium div {
             background-color: rgba(16, 185, 129, 0.8);
         }
+
         .marker-cluster-large {
             background-color: rgba(239, 68, 68, 0.6);
         }
+
         .marker-cluster-large div {
             background-color: rgba(239, 68, 68, 0.8);
         }
+
         .marker-cluster {
             background-clip: padding-box;
             border-radius: 20px;
         }
+
         .marker-cluster div {
             width: 30px;
             height: 30px;
@@ -842,15 +977,23 @@
             border-radius: 15px;
             font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
         }
+
         .marker-cluster span {
             line-height: 30px;
         }
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header class="header">
@@ -893,7 +1036,7 @@
             </button>
         </div>
         <div class="panel-content">
-            
+
             <div class="control-section">
                 <div class="section-title" id="instructions-toggle">
                     使用指引
@@ -931,10 +1074,15 @@
                             <input type="radio" id="terrain-layer" name="map-layer">
                             <label for="terrain-layer">地形圖</label>
                         </div>
+                        <div class="layer-option" data-layer="混合地圖">
+                            <input type="radio" id="hybrid-layer" name="map-layer">
+                            <label for="hybrid-layer">混合地圖</label>
+                        </div>
+                        
                     </div>
                 </div>
             </div>
-            
+
             <div class="control-section">
                 <div class="section-title" id="parking-info-toggle">
                     停車位資訊
@@ -985,7 +1133,7 @@
                     <p>繪製範圍以自動查詢該區域的停車位。</p>
                 </div>
             </div>
-            
+
             <div class="control-section">
                 <div class="section-title" id="parking-details-toggle">
                     停車位詳細資訊
@@ -1000,7 +1148,8 @@
                         <p style="text-align: center; opacity: 0.8;">點擊停車位標記或列表項目查看詳細資訊</p>
                     </div>
                 </div>
-                <div id="parking-details-empty-state" class="empty-state" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border-color: rgba(255, 255, 255, 0.3);">
+                <div id="parking-details-empty-state" class="empty-state"
+                    style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border-color: rgba(255, 255, 255, 0.3);">
                     <p>點擊地圖上的停車位標記或列表項目以查看詳細資訊</p>
                 </div>
             </div>
@@ -1050,22 +1199,39 @@
                 attribution: '© Esri',
                 maxZoom: 19
             }),
+            "混合地圖": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: '© Esri',
+                maxZoom: 19
+            }),
             "地形圖": L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenTopoMap',
                 maxZoom: 17
             })
         };
+
+        // 添加混合地圖的標籤圖層
+        const hybridLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '© Esri',
+            maxZoom: 19,
+            pane: 'overlayPane'  // 確保標籤在地圖頂層
+        });
+
+        // 創建混合地圖圖層組
+        const hybridLayer = L.layerGroup([tileLayers["混合地圖"], hybridLabels]);
+
+        // 更新圖層對象
+        tileLayers["混合地圖"] = hybridLayer;
         // 添加預設地圖圖層
         tileLayers["開放街道地圖"].addTo(map);
         let currentTileLayer = tileLayers["開放街道地圖"];
-        
+
         // 初始化繪製項目圖層
         const drawnItems = new L.FeatureGroup();
         map.addLayer(drawnItems);
         // 初始化標記群集層
         const markers = L.markerClusterGroup({
             maxClusterRadius: 80,
-            iconCreateFunction: function(cluster) {
+            iconCreateFunction: function (cluster) {
                 const count = cluster.getChildCount();
                 let size = 'small';
                 if (count > 50) size = 'large';
@@ -1106,7 +1272,7 @@
             } else {
                 // 桌面：淡入淡出
                 panelContainer.classList.toggle('desktop-visible', panelVisible);
-                
+
                 // 更新桌面 toggle 按鈕文字和圖標
                 const icon = desktopToggle.querySelector('i');
                 if (panelVisible) {
@@ -1164,12 +1330,12 @@
             const parkingEmptyState = document.getElementById('parking-empty-state');
             const parkingDetails = document.getElementById('parking-details');
             const parkingDetailsEmptyState = document.getElementById('parking-details-empty-state');
-            
+
             parkingInfo.classList.remove('collapsed');
             document.getElementById('collapse-icon-parking-info').classList.remove('collapsed');
             document.getElementById('collapse-icon-parking-info').innerHTML = '<i class="fas fa-caret-down"></i>';
             parkingEmptyState.style.display = 'block';
-            
+
             parkingDetails.classList.add('collapsed');
             parkingDetailsEmptyState.style.display = 'block';
             document.getElementById('collapse-icon-parking-details').classList.add('collapsed');
@@ -1271,7 +1437,7 @@
                         // 創建標記
                         const marker = L.marker([lat, lng], { icon: parkingIcon });
                         // 為標記添加點擊事件
-                        marker.on('click', function() {
+                        marker.on('click', function () {
                             showParkingDetails(feature);
                             // 取消之前選中的標記
                             if (selectedParking) {
@@ -1343,7 +1509,7 @@
         // 顯示停車位詳細資訊
         function showParkingDetails(feature) {
             const properties = feature.properties;
-            
+
             // 更新詳細資訊內容
             const detailsContent = document.getElementById('parking-details-content');
             detailsContent.innerHTML = `
@@ -1388,7 +1554,7 @@
                     <span class="info-value">${properties.PaymentUnit} 元/${properties.TimeUnit}分鐘</span>
                 </div>
             `;
-            
+
             // 確保詳細資訊面板展開
             const parkingDetails = document.getElementById('parking-details');
             const parkingDetailsEmptyState = document.getElementById('parking-details-empty-state');
@@ -1396,7 +1562,7 @@
             parkingDetailsEmptyState.style.display = 'none';
             document.getElementById('collapse-icon-parking-details').classList.remove('collapsed');
             document.getElementById('collapse-icon-parking-details').innerHTML = '<i class="fas fa-caret-down"></i>';
-            
+
             // 在移動裝置上自動打開面板
             if (window.innerWidth <= 768 && !panelVisible) {
                 togglePanel();
@@ -1406,16 +1572,16 @@
         function updateParkingStatistics(features) {
             let total = features.length;
             let typeA = 0, typeB = 0, typeC = 0, typeD = 0, typeE = 0, otherTypes = 0;
-            
+
             // 清空停車位列表
             const parkingList = document.getElementById('parking-list');
             parkingList.innerHTML = '';
-            
+
             // 計算統計和創建列表
             features.forEach((feature, index) => {
                 const properties = feature.properties;
                 // 計算車輛類型
-                switch(properties.VehicleType) {
+                switch (properties.VehicleType) {
                     case 'A':
                         typeA++;
                         break;
@@ -1435,7 +1601,7 @@
                         otherTypes++;
                         break;
                 }
-                
+
                 // 創建停車位列表項目
                 const parkingItem = document.createElement('div');
                 parkingItem.className = 'parking-item';
@@ -1446,18 +1612,18 @@
                         <span>${getVehicleTypeName(properties.VehicleType)} • ${properties.LPP}分鐘</span>
                     </div>
                 `;
-                
+
                 // 點擊時在地圖上高亮顯示
                 parkingItem.addEventListener('click', () => {
                     const [lng, lat] = feature.geometry.coordinates;
                     map.setView([lat, lng], 18);
-                    
+
                     // 找到對應的標記並觸發點擊事件
                     const marker = markers.getLayers().find(m => {
                         const latLng = m.getLatLng();
                         return latLng.lat === lat && latLng.lng === lng;
                     });
-                    
+
                     if (marker) {
                         // 觸發標記點擊事件來顯示詳細資訊
                         marker.fire('click');
@@ -1472,7 +1638,7 @@
                 });
                 parkingList.appendChild(parkingItem);
             });
-            
+
             // 更新統計顯示
             updateParkingStats(total, typeA, typeB, typeC, typeD, typeE, otherTypes);
         }
@@ -1525,7 +1691,7 @@
         const collapseIconLayerControl = document.getElementById('collapse-icon-layer-control');
         const layerOptions = document.getElementById('layer-options');
         let layerControlCollapsed = false;
-        
+
         // 圖層切換功能
         function switchTileLayer(layerName) {
             if (currentTileLayer) {
@@ -1533,14 +1699,14 @@
             }
             currentTileLayer = tileLayers[layerName];
             map.addLayer(currentTileLayer);
-            
+
             // 更新選中狀態
             document.querySelectorAll('.layer-option').forEach(option => {
                 option.classList.remove('active');
                 const radio = option.querySelector('input[type="radio"]');
                 radio.checked = false;
             });
-            
+
             const selectedOption = document.querySelector(`.layer-option[data-layer="${layerName}"]`);
             if (selectedOption) {
                 selectedOption.classList.add('active');
@@ -1548,7 +1714,7 @@
                 radio.checked = true;
             }
         }
-        
+
         // 初始化圖層選項
         layerOptions.addEventListener('click', (e) => {
             const option = e.target.closest('.layer-option');
@@ -1558,7 +1724,7 @@
                 showNotification(`切換到 ${layerName}`, 'info');
             }
         });
-        
+
         // 圖層控制摺疊功能
         layerControlToggle.addEventListener('click', () => {
             layerControlCollapsed = !layerControlCollapsed;
@@ -1568,7 +1734,7 @@
                 '<i class="fas fa-caret-right"></i>' :
                 '<i class="fas fa-caret-down"></i>';
         });
-        
+
         // 可摺疊指引功能
         const instructionsToggle = document.getElementById('instructions-toggle');
         const instructions = document.getElementById('instructions');
@@ -1629,12 +1795,12 @@
             const parkingEmptyState = document.getElementById('parking-empty-state');
             const parkingDetails = document.getElementById('parking-details');
             const parkingDetailsEmptyState = document.getElementById('parking-details-empty-state');
-            
+
             parkingInfo.classList.remove('collapsed');
             document.getElementById('collapse-icon-parking-info').classList.remove('collapsed');
             document.getElementById('collapse-icon-parking-info').innerHTML = '<i class="fas fa-caret-down"></i>';
             parkingEmptyState.style.display = 'block';
-            
+
             parkingDetails.classList.add('collapsed');
             parkingDetailsEmptyState.style.display = 'block';
             document.getElementById('collapse-icon-parking-details').classList.add('collapsed');
@@ -1698,11 +1864,12 @@
             }
         });
         // 鍵盤快捷鍵：ESC 鍵關閉面板
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape' && panelVisible) {
                 togglePanel();
             }
         });
     </script>
 </body>
+
 </html>
